@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { User } from './user';
+
 
 @Component({
   selector: 'app-root',
@@ -6,5 +8,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'y';
+topics=['Angular','React','Vue'];
+
+userModel = new User('','rob@gmail.com',9876543210,'','morning',true);
 }
