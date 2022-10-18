@@ -1,7 +1,11 @@
 <div class="container-fluid mb-5">
   <h1>Bootcamp Enrollment Form</h1>
-  <form #userForm="ngForm">
+  <div class="alert alert-danger" *ngIf="errorMsg">
+    {{errorMsg}}
+  </div>
+  <form #userForm="ngForm" *ngIf="!submitted" (ngSubmit)="onSubmit(userForm)" novalidate>
 
+    {{userForm.form.valid}}
     <div class="form-group">
       <label>Name</label>
       <input type="text" required #name="ngModel"
@@ -25,11 +29,12 @@
     </div>
 
     <div class="form-group">
-      <select class="custom-select" name="topic"[(ngModel)]="userModel.topic">
-        <option value="">I am interested in</option>
+      <select (blur)="validateTopic(topic.value)"(change)="validateTopic(topic.value)" #topic="ngModel"[class.is-invalid]="topicHasError && topic.touched"class="custom-select" name="topic"[(ngModel)]="userModel.topic">
+        <option value="default">I am interested in</option>
         <option *ngFor="let topic of topics">{{topic}}</option>
 
       </select>
+      <small class="text-danger"[class.d-none]="topicHasError ||topic.untouched">please choose a topic</small>
     </div>
 <div class="mb-3">
   <label>Time preference</label>
@@ -47,7 +52,7 @@
   <label class="form-check-label">Send me promotional offers</label>
 
 </div>
-<button class="btn btn-primary" type="submit">Submit form</button>
+<button [disabled]="userForm.form.invalid || topicHasError" class="btn btn-primary" type="submit">Submit form</button>
 
   </form>
 </div>
