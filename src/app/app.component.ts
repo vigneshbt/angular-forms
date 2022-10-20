@@ -1,34 +1,75 @@
-import { Component } from '@angular/core';
-import { User } from './user';
-import { EnrollmentService } from './enrollment.service';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder,Validators, FormControl, FormGroup, FormArray } from '@angular/forms';
+import { PasswordValidator } from 'shared/password.validaor';
+import { forbiddenNameValidator } from 'shared/user-name.validator';
+import { RegistrationService } from 'reactive-forms/registration.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
-topics=['Angular','React','Vue'];
-topicHasError=true;
-submitted = false;
-errorMsg ='';
-userModel = new User('Rob','rob@gmail.com',9876543210,'default','morning',true);
-constructor(private _enrollmentService:EnrollmentService){}
-validateTopic(value:any){
-  if (value === 'default') {
-    this.topicHasError =true;
-  } else{
-    this.topicHasError=false;
+export class AppComponent implements OnInit {
 
+  'registrationForm': FormGroup;
+  get userName(){
+    return this.registrationForm.get('userName')
   }
+
+  get email(){
+    return this.registrationForm.get('email')
+  }
+
+  get alternateEmails() {
+    return this.registrationForm.get('alternateEmails') as FormArray;
+  }
+
+  addAlternateEmail() {
+    this.alternateEmails.push(this.fb.control(''));
+  }
+  constructor(private fb: FormBuilder, private _registrationService: RegistrationService) {}
+
+  ngOnInit(){
+    this.registrationForm = this.fb.group({
+      userName: ['',[Validators.required, Validators.minLength(3),forbiddenNameValidator(/password/)]],
+      email: [''],
+      subscribe:[false],
+      password: [''],
+      confirmPassword: [''],
+      address: this.fb.group({
+        city: [''],
+        state: [''],
+        postalCode: ['']
+      }),
+      alternateEmails: this.fb.array([])
+    },{Validator: PasswordValidator});
+
+    this.registrationForm.get('subscribe')?.valueChanges
+    .subscribe(checkedValue =>{
+      const email = this.registrationForm.get('email');
+      if (checkedValue) {
+        email?.setValidators(Validators.required);
+      } else{
+        email?.clearValidators();
+      }
+      email?.updateValueAndValidity();
+    });
+  }
+
+  LoadApiData() {
+    this.registrationForm.patchValue({
+      userName: 'Bruce',
+    password: 'test',
+    confirmPassword: 'test'
+  });
 }
-onSubmit(userForm:any) {
-  console.log(userForm);
-  // this.submitted = true;
-  // this._enrollmentService.enroll(this.userModel)
-  // .subscribe(
-  //   data => console.log('Success!',data),
-  //   error => this.errorMsg = error.statusText
-  // );
+onSubmit() {
+  console.log(this.registrationForm.value);
+  this._registrationService.register(this.registrationForm.value)
+  .subscribe(
+    response => console.log('Success!',response),
+    error => console.error('Error!',error)
+    );
+
 }
 }
